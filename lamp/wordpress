@@ -24,3 +24,7 @@ Step 4: Installing Wordpress
 #chmod -R 755 /var/www/html/wordpress
 #mkdir -p /var/www/html/wordpress/wp-content/uploads
 #chown -R www-data:www-data /var/www/html/wordpress/wp-content/uploads
+
+
+Open web browser
+http://ipaddress/wordpress
