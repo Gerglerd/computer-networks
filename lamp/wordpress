@@ -4,7 +4,7 @@ Step 1: Update the System
 #apt-get update
 
 Step 2: Install LAMP Server
-#apt-get install lamp-server^
+#apt-get install lamp-server^ (or can be downloaded and installed via sudo apt-get)
 
 Step 3: Wordpress Database Initialization
 #mysql -u root -p
