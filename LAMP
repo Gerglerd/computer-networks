@@ -1,0 +1,40 @@
+https://www.digitalocean.com/community/tutorials/how-to-install-wordpress-with-lamp-on-ubuntu-16-04
+1) Install Apache:
+sudo apt update
+sudo apt install apache2
+2) Setting up a firewall to allow web traffic:
+sudo ufw allow in "Apache Full"
+3) You can check the installation result by typing in your web browser the public IP address of your server:
+http://IP_адрес_вашего_сервера
+4)Install Mysql:
+sudo apt install mysql-server
+sudo mysql_secure_installation
+5) Setting Mysql:
+sudo mysql
+SELECT user,authentication_string,plugin,host FROM mysql.user;
+6) Change password:
+ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'password';
+FLUSH PRIVILEGES;
+exit
+7)Install php:
+sudo apt install php libapache2-mod-php php-mysql
+8)Change config file:
+sudo nano /etc/apache2/mods-enabled/dir.conf
+File :
+<IfModule mod_dir.c>
+    DirectoryIndex index.html index.cgi index.pl index.php index.xhtml index.htm
+</IfModule>
+Change to:
+<IfModule mod_dir.c>
+    DirectoryIndex index.html index.cgi index.pl index.php index.xhtml index.htm
+</IfModule>
+9)Restart:
+sudo systemctl restart apache2
+10) Test web php:
+sudo nano /var/www/html/info.php
+And write:
+<?php
+phpinfo();
+?>
+11)Open this adress in browser:
+http://IP_адрес_вашего_сервера/info.php
