@@ -6,9 +6,9 @@ sudo iptables -A INPUT -i eth0 -m conntrack --ctstate ESTABLISHED,RELATED -j ACC
 sudo iptables -A INPUT -i eth0 -j DROP
 
 
-ssh -L 8070:www.google.com:22 <hostname>
-ssh -L 8080:ccfit.nsu.ru:22 <hostname>
-ssh -L 8090:localhost:22 <hostname>
+ssh -L 8070:www.google.com:22 hostname
+ssh -L 8080:ccfit.nsu.ru:22 hostname
+ssh -L 8090:localhost:22 hostname
 
 
 hostname -s
