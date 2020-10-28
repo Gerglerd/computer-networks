@@ -10,8 +10,13 @@ ssh -L 8070:www.google.com:22 <hostname>
 ssh -L 8080:ccfit.nsu.ru:22 <hostname>
 ssh -L 8090:localhost:22 <hostname>
 
+
+hostname -s
+
 w - look your pts/number
+
 to kill:
 pkill -9 -t pts/number
+
 in browser:
 http://localhost/8090
