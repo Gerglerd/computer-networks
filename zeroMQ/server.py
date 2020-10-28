@@ -1,14 +1,9 @@
 import time
 import zmq
-from pip._vendor.distlib.compat import raw_input
 
 context = zmq.Context()
-
-# socket connect to server
-print("Connecting to server...")
-socket = context.socket(zmq.REQ)
-n = raw_input('server number > ')
-socket.bind("tcp://localhost:5000" + n)  # accept connections on a socket
+socket = context.socket(zmq.REP)
+socket.bind("tcp://*:5555")
 
 while True:
     # wait next request
