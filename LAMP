@@ -4,7 +4,7 @@ sudo apt update
 sudo apt install apache2
 2) Setting up a firewall to allow web traffic:
 sudo ufw allow in "Apache Full"
-3) You can check the installation result by typing in your web browser the public IP address of your server:
+3) Check the installation result by typing in web browser the public IP address of your server:
 http://127.0.0.1
 4)Install Mysql:
 sudo apt install mysql-server
