@@ -11,6 +11,7 @@ http://127.0.0.1
 4)Install Mysql:
 sudo apt install mysql-server
 sudo mysql_secure_installation
+X4CjFYrrqUxUbUYBvCj364jsKEwUe2xTFsGdDQpgDPQUq6YpgD
 5) Setting Mysql:
 sudo mysql
 SELECT user,authentication_string,plugin,host FROM mysql.user;
