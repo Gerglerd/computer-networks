@@ -1,4 +1,6 @@
+https://www.digitalocean.com/community/tutorials/how-to-install-linux-apache-mysql-php-lamp-stack-on-ubuntu-16-04
 https://www.digitalocean.com/community/tutorials/how-to-install-wordpress-with-lamp-on-ubuntu-16-04
+
 1) Install Apache:
 sudo apt update
 sudo apt install apache2
@@ -26,7 +28,7 @@ File :
 </IfModule>
 Change to:
 <IfModule mod_dir.c>
-    DirectoryIndex index.html index.cgi index.pl index.php index.xhtml index.htm
+    DirectoryIndex index.php index.html index.cgi index.pl index.xhtml index.htm
 </IfModule>
 9)Restart:
 sudo systemctl restart apache2
