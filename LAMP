@@ -10,18 +10,10 @@ sudo ufw allow in "Apache Full"
 http://127.0.0.1
 4)Install Mysql:
 sudo apt install mysql-server
-sudo mysql_secure_installation
-X4CjFYrrqUxUbUYBvCj364jsKEwUe2xTFsGdDQpgDPQUq6YpgD
-5) Setting Mysql:
-sudo mysql
-SELECT user,authentication_string,plugin,host FROM mysql.user;
-6) Change password:
-ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'password';
-FLUSH PRIVILEGES;
-exit
-7)Install php:
+suso mysql_secure_installation
+5)Install php:
 sudo apt install php libapache2-mod-php php-mysql
-8)Change config file:
+6)Change config file:
 sudo nano /etc/apache2/mods-enabled/dir.conf
 File :
 <IfModule mod_dir.c>
@@ -31,13 +23,13 @@ Change to:
 <IfModule mod_dir.c>
     DirectoryIndex index.php index.html index.cgi index.pl index.xhtml index.htm
 </IfModule>
-9)Restart:
+7)Restart:
 sudo systemctl restart apache2
-10) Test web php:
+8) Test web php:
 sudo nano /var/www/html/info.php
 And write:
 <?php
 phpinfo();
 ?>
-11)Open this adress in browser:
+9)Open this adress in browser:
 http://127.0.0.1/info.php
