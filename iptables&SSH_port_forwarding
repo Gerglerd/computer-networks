@@ -19,4 +19,4 @@ to kill:
 pkill -9 -t pts/number
 
 in browser:
-http://localhost/8090
+http://localhost:8090
