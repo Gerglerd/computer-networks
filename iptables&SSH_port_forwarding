@@ -12,6 +12,9 @@ https://www.internet-technologies.ru/articles/newbie/uchimsya-ispolzovat-ssh-tun
 
 SSH port forwarding:
 
+ssh -R 8888:myip.ru:80 p.saifudinova@ccfit.nsu.ru
+telnet localhost 8888
+
 ssh -L 8888:ccfit.nsu.ru:22 hostname
 ssh -L 8090:localhost:22 hostname
 
