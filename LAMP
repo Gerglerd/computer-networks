@@ -23,6 +23,9 @@ Change to:
 <IfModule mod_dir.c>
     DirectoryIndex index.php index.html index.cgi index.pl index.xhtml index.htm
 </IfModule>
+
+ЕЩЕ НАСТРОЙКА В ЛОГАХ НАЙТИ ОШИБКУ
+
 7)Restart:
 sudo systemctl restart apache2
 8) Test web php:
