@@ -1,5 +1,7 @@
 https://itproffi.ru/nastrojka-pravil-iptables-v-linux/
+https://www.k-max.name/linux/iptables-v-primerax/
 
+iptables settings:
 
 sudo iptables -F 
 sudo iptables -A INPUT -i eth0 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
@@ -7,10 +9,13 @@ sudo iptables -A INPUT -i eth0 -p TCP --dport 22 -j ACCEPT
 sudo iptables -A INPUT -i eth0 -j DROP
 
 https://www.internet-technologies.ru/articles/newbie/uchimsya-ispolzovat-ssh-tunnelirovanie-dlya-bezopasnogo-serfinga.html
+
 SSH port forwarding:
-ssh -L 8080:ccfit.nsu.ru:22 hostname
+
+ssh -L 8888:ccfit.nsu.ru:22 hostname
 ssh -L 8090:localhost:22 hostname
 
+--------------------------------------------------------------------------------------------------------------------------
 
 hostname -s
 
