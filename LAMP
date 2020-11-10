@@ -25,6 +25,7 @@ Change to:
 </IfModule>
 
 ЕЩЕ НАСТРОЙКА В ЛОГАХ НАЙТИ ОШИБКУ
+On Apache, php. ini is usually located in /etc/php/7.2/apache2/php. ini 
 
 7)Restart:
 sudo systemctl restart apache2
