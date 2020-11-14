@@ -1,13 +1,13 @@
 import socket
 import select
-import time
 import sys
+import queue
 
 buffer_size = 4096
-delay = 0.0001
-forward_to = ('localhost', 5556)  # connection with server
+forward_to = ('localhost', 5556)  # connect to server
 
 
+# Establishes a connection between the proxy server and the target server
 class Forward:
     def __init__(self):
         self.forward = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -17,9 +17,11 @@ class Forward:
         return self.forward
 
 
-class Server:
+# main class
+class TheServer:
     input_list = []
-    channel = {}
+    output_list = []
+    message_queue = {}
 
     def __init__(self, host, port):
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -27,63 +29,74 @@ class Server:
         self.server.bind((host, port))
         self.server.listen(20)
 
-    def mail_loop(self):
+    def main_loop(self):
         self.input_list.append(self.server)
-
         while 1:
-            time.sleep(delay)
-            inputready, outputready, exceptready = select.select(self.input_list, [], [])
-
-            for self.s in inputready:
-                if self.s == self.server:
-                    self.on_accept()
-                    break
-
-                self.data = self.s.recv(buffer_size)
-
-                if len(self.data) == 0:
-                    self.on_close()
-                    break
-
+            readable, writable, exceptional = select.select(self.input_list, self.output_list, self.input_list)
+            for self.s in readable:
+                if self.s is self.server:
+                    if self.s == self.server:
+                        self.on_accept()
+                        break
+                    self.data = self.s.recv(buffer_size)
+                    if len(self.data) == 0:
+                        self.on_close()
+                        break
+                    else:
+                        self.on_recv()
+            for self.s in writable:
+                try:
+                    next_message = self.message_queue[self.s].get_nowait()
+                except queue.Empty:
+                    self.output_list.remove(self.s)
                 else:
-                    self.on_recv()
-
+                    self.s.send(next_message)
+            for self.s in exceptional:
+                print(sys.stderr, 'handling exceptional condition for\n')
+                self.input_list.remove(self.s)
+                if self.s in self.output_list:
+                    self.output_list.remove(self.s)
+                self.on_close()
 
     def on_accept(self):
-        forward = Forward().start(forward_to[0], forward_to[1]) #socket connect to server
-        client_socket, client_addr = self.server.accept()
-
+        forward = Forward().start(forward_to[0], forward_to[1])  # socket connect to server
+        client_socket, client_addr = self.server.accept()  # proxy connect to client
         if forward:
-            print(client_addr, "connected")
+            print(client_addr, "has connected")
             self.input_list.append(client_socket)
             self.input_list.append(forward)
-            self.channel[client_socket] = forward
-            self.channel[forward] = client_socket
-
+            self.message_queue[client_socket] = forward
+            self.message_queue[forward] = client_socket
         else:
-            print("Can't establish connection with remote server. "
-                  "Closing connection with client side:", client_addr)
+            print("Can't establish connection with remote server.")
+            print("Closing connection with client side: ", client_addr)
             client_socket.close()
 
     def on_close(self):
-        print(self.s.getpeername(), "disconnected")
+        print(self.s.getpeername(), " has disconnected")
+        # remove objects from input_list
         self.input_list.remove(self.s)
-        self.input_list.remove(self.channel[self.s])
-        out = self.channel[self.s]
-        self.channel[out].close()
-        self.channel[self.s].close()
-        del self.channel[out]
-        del self.channel[self.s]
+        self.input_list.remove(self.message_queue[self.s])
+        out = self.message_queue[self.s]
+        # close the connection with client
+        self.message_queue[out].close()  # equivalent to do self.s.close()
+        # close the connection with remote server
+        self.message_queue[self.s].close()
+        # delete both objects from channel dict
+        del self.message_queue[out]
+        del self.message_queue[self.s]
 
     def on_recv(self):
         data = self.data
+        # here we can parse and/or modify the data before send forward
         print(data.decode())
-        self.channel[self.s].send(data)
+        self.message_queue[self.s].send(data)
+
 
 if __name__ == '__main__':
-    server = Server('localhost', 9091)
+    server = TheServer('', 9091)
     try:
-        server.mail_loop()
+        server.main_loop()
     except KeyboardInterrupt:
-        print("Cntr+C to stop server")
+        print("Ctrl C - Stopping server")
         sys.exit(1)
