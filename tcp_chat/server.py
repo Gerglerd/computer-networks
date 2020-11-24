@@ -1,6 +1,18 @@
 import socket
 from threading import Thread
 
+accounts = {
+    '1': '1111',
+    '2': '2222',
+    '3': '3333'
+}
+
+online = {
+    '1': False,
+    '2': False,
+    '3': False
+}
+
 
 def sendMessage(message, clientSockets):
     for clsock in clientSockets:
@@ -10,7 +22,7 @@ def sendMessage(message, clientSockets):
 
 def autorization(clsock, clientSockets, online, accounts):
     while True:
-        data = clsock.recv(1000)
+        data = clsock.recv(1024)
         if checkUser(data, accounts, online):
             print('OK')
             clsock.send(bytes("correct", 'utf8'))
@@ -25,15 +37,15 @@ def autorization(clsock, clientSockets, online, accounts):
 def reciveMessage(clsock, clientSockets, online, accounts, message):
     autorization(clsock, clientSockets, online, accounts)
     while True:
-        message = clsock.recv(1000)
+        message = clsock.recv(1024)
         if len(message) == 0:
-            user = clsock.recv(1000).decode()
+            user = clsock.recv(1024).decode()
             closeClient(clsock, clientSockets, online, user)
         else:
             if "!get" == message.decode():
                 clsock.send(bytes(str(getOnlineUsers(online)), "utf8"))
             elif "!disconnect" == message.decode():
-                usr = clsock.recv(1000).decode()
+                usr = clsock.recv(1024).decode()
                 closeClient(clsock, clientSockets, online, usr)
                 break
             elif message:
@@ -63,30 +75,18 @@ def closeClient(clsock, clientSockets, online, user):
     pass
 
 
-def checkUser(auth, acc, online):
-    logAndPass = auth.decode('utf8').split('~')
-    if isConnected(logAndPass[0], online):
+def checkUser(authorization, account, online):
+    loginPasswd = authorization.decode('utf8').split('~')
+    if isConnected(loginPasswd[0], online):
         return False
-    if logAndPass[0] in acc.keys():
+    if loginPasswd[0] in account.keys():
         print('login ok')
-        if logAndPass[1] == acc[logAndPass[0]]:
-            online[logAndPass[0]] = True
+        if loginPasswd[1] == account[loginPasswd[0]]:
+            online[loginPasswd[0]] = True
             print('passwd ok')
             return True
     return False
 
-
-accounts = {
-    '1': '1111',
-    '2': '2222',
-    '3': '3333'
-}
-
-online = {
-    '1': False,
-    '2': False,
-    '3': False
-}
 
 clientSockets = []
 MAX_CLIENTS = 10
