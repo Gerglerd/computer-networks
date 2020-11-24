@@ -14,7 +14,7 @@ def disconnect(sock, login):
 
 def reciveMessage(sock, message):
     while True:
-        message = sock.recv(1000)
+        message = sock.recv(1024)
         print(message.decode())
 
 
@@ -27,7 +27,7 @@ while True:
     passwd = input()
     auth = login + '~' + passwd
     s.send(bytes(auth, 'utf8'))
-    data = s.recv(1000)
+    data = s.recv(1024)
     if data.decode('utf8') == 'correct':
         print('Correct!')
         break
@@ -37,14 +37,12 @@ while True:
 try:
     recvThread = Thread(target=reciveMessage, args=(s, 'hello'))
     recvThread.start()
-
     while True:
         message = input()
         if message == "!disconnect":
             s.send(bytes(message, 'utf8'))
             disconnect(s, login)
         s.send(bytes(message, 'utf8'))
-
 except KeyboardInterrupt:
     disconnect(s, login)
 
