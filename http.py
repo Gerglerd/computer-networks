@@ -1,5 +1,5 @@
 #https://stackabuse.com/serving-files-with-pythons-simplehttpserver-module/
-#python3 -m http.server 8000 -directory
+#python3 -m http.server 8000 --directory
 
 import http.server
 import socketserver
