@@ -1,3 +1,5 @@
+# https://coderlessons.com/tutorials/kachestvo-programmnogo-obespecheniia/izuchite-testirovanie-proniknoveniia-python/setevoi-skaner-python
+
 from socket import *
 import time
 
