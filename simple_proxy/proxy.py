@@ -4,7 +4,6 @@ import sys
 import queue
 
 buffer_size = 4096
-forward_to = ('localhost', 5556)
 
 
 class Forward:
@@ -21,6 +20,7 @@ class TheServer:
     inputs = []
     outputs = []
     message_queues = {}
+    channel = {}
 
     def __init__(self, host, port):
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -29,24 +29,19 @@ class TheServer:
         self.server.listen(20)
 
     def main_loop(self):
-
         self.inputs.append(self.server)
-
-        while self.inputs:
+        while 1:
             readable, writable, exceptional = select.select(self.inputs, self.outputs, self.inputs)
-
             for self.s in readable:
-                if self.s is self.server:
+                if self.s == self.server:
                     self.on_accept()
                     break
                 self.data = self.s.recv(buffer_size)
-                if len(self.data) == 0:
-                    self.on_close()
-                    break
-                else:
+                if len(self.data) != 0:
                     self.on_recv()
 
             for self.s in writable:
+                print("WRITABLE")
                 try:
                     next_msg = self.message_queues[self.s].get_nowait()
                 except queue.Empty:
@@ -70,35 +65,34 @@ class TheServer:
 
     def on_accept(self):
 
-        forward = Forward().start(forward_to[0], forward_to[1])  # socket conn to server
-        clientsock, clientaddr = self.server.accept()  # proxy connects to client
+        forward = Forward().start('localhost', 5555)  # socket connects to server
+        clientsock, clientaddr = self.server.accept()  # client connects to proxy
 
         if forward:
             print(clientaddr, "connected")
             self.inputs.append(clientsock)
             self.inputs.append(forward)
-            self.message_queues[clientsock] = forward
-            self.message_queues[forward] = clientsock
+            self.channel[clientsock] = forward
+            self.channel[forward] = clientsock
         else:
             print("Can't establish connection with remote server. ", )
             print("Closing connection with client side", clientaddr)
             clientsock.close()
 
     def on_close(self):
-
         print(self.s.getpeername(), "disconnected")
         self.inputs.remove(self.s)
-        self.inputs.remove(self.message_queues[self.s])
-        out = self.message_queues[self.s]
-        self.message_queues[out].close()
-        self.message_queues[self.s].close()
-        del self.message_queues[out]
-        del self.message_queues[self.s]
+        self.inputs.remove(self.channel[self.s])
+        out = self.channel[self.s]
+        self.channel[out].close()
+        self.channel[self.s].close()
+        del self.channel[out]
+        del self.channel[self.s]
 
     def on_recv(self):
         data = self.data
         print(data.decode())
-        self.message_queues[self.s].send(data)
+        self.channel[self.s].send(data)
 
 
 if __name__ == '__main__':
@@ -106,5 +100,5 @@ if __name__ == '__main__':
     try:
         server.main_loop()
     except KeyboardInterrupt:
-        print("Ctrl C - Stopping server")
+        print("\nCtrl C - Stopping server")
         sys.exit(1)
