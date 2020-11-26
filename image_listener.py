@@ -1,4 +1,4 @@
-https://habr.com/ru/post/102521/
+# https://habr.com/ru/post/102521/
 from scapy import sendrecv
 import time
 
