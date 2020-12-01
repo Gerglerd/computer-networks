@@ -1,0 +1,72 @@
+https://www.hiroom2.com/2019/06/15/ubuntu-1904-bind-en/
+https://www.k-max.name/linux/dns-server-bind/#%20iformation%20about%20bind
+https://www.k-max.name/linux/howto-dns-server-bind/
+
+sudo apt-get install -y bind9
+sudo nano /etc/bind/named.conf.options
+---------------------------------
+options {
+  directory "/var/cache/bind";
+  listen-on port 53 { localhost; 192.168.11.0/24; };
+  allow-query { localhost; 192.168.11.0/24; };
+  forwarders { 192.168.11.1; };
+  recursion yes;
+}
+---------------------------------
+sudo nano /etc/bind/named.conf.local
+---------------------------------
+zone "zone1.com" IN {
+        type master;
+        file "zone1.com.zone";
+};
+----------------------------------
+sudo nano /var/cache/bind/zone1.com.zone
+----------------------------------
+$TTL 7200
+;Start of authority - указание на новую зону
+@   IN SOA zone1. root.zone1. (
+                            174         ; Serial
+                         604800         ; Refresh
+                          86400         ; Retry
+                        2419200         ; Expire
+                         604800 )       ; Negative Cache TTL
+
+;заголовочная запись была сверху, теперь сервера имён (NS - name server)
+;Authoritative name server -  Адрес узла, отвечающего за доменную зону
+    IN NS server
+server  IN  A     192.168.1.5
+me      IN  CNAME server
+;me - альтернативное имя для zone1.
+post1   IN  MX  11     imap.yandex.ru.
+        IN  A 77.88.21.125
+        IN  WKS 77.88.21.125     tcp imap
+yand    IN      CNAME   post1
+post2   IN      MX      10              imap.gmail.com.
+                IN      A       173.194.222.109
+                IN      A       173.194.222.108
+                IN      WKS     173.194.222.109 tcp     imap
+                IN      WKS     173.194.222.108 tcp     imap
+gml             IN      CNAME   post2
+;
+;WKS - well-known service Список доступных общеизвестных сервисов теперь уже не корень зоны, а имя в нашей зоне
+-------------------------------------------------
+/usr/sbin/named-checkzone zone1.com /var/cache/bind/zone1.com.zone
+>zone zone1.com/IN: loaded serial 174
+>OK
+sudo systemctl enable bind9
+sudo systemctl restart bind9
+nslookup server.zone1.com localhost.localdomain
+------------>Server:		localhost.localdomain
+------------>Address:	::1#53
+
+------------>Name:	server.zone1.com
+------------>Address: 192.168.1.5
+nslookup me.zone1.com localhost.localdomain
+------------>Server:		localhost.localdomain
+------------>Address:	::1#53
+
+------------>me.zone1.com	canonical name = server.zone1.com.
+------------>Name:	server.zone1.com
+------------>Address: 192.168.1.5
+
+
