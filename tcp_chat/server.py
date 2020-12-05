@@ -1,105 +1,102 @@
+import threading
 import socket
-from threading import Thread
 
-accounts = {
-    '1': '1111',
-    '2': '2222',
-    '3': '3333'
-}
+host = '127.0.0.1'
+port = 5555
 
-online = {
-    '1': False,
-    '2': False,
-    '3': False
-}
+server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server.bind((host, port))
+server.listen()
+
+clients = []
+nicknames = []
 
 
-def sendMessage(message, clientSockets):
-    for clsock in clientSockets:
-        clsock.send(bytes(message))
-    pass
+def broadcast(message):
+    for client in clients:
+        client.send(message)
 
 
-def autorization(clsock, clientSockets, online, accounts):
+def handle(client):
     while True:
-        data = clsock.recv(1024)
-        if checkUser(data, accounts, online):
-            print('OK')
-            clsock.send(bytes("correct", 'utf8'))
-            clientSockets.append(clsock)
-            print("client connected from: ", addr)
-            break
-        else:
-            clsock.send(bytes("incorrect", 'utf8'))
-    pass
-
-
-def reciveMessage(clsock, clientSockets, online, accounts, message):
-    autorization(clsock, clientSockets, online, accounts)
-    while True:
-        message = clsock.recv(1024)
-        if len(message) == 0:
-            user = clsock.recv(1024).decode()
-            closeClient(clsock, clientSockets, online, user)
-        else:
-            if "!get" == message.decode():
-                clsock.send(bytes(str(getOnlineUsers(online)), "utf8"))
-            elif "!disconnect" == message.decode():
-                usr = clsock.recv(1024).decode()
-                closeClient(clsock, clientSockets, online, usr)
+        try:
+            msg = message = client.recv(1024)
+            if msg.decode('ascii').startwith('KICK'):
+                if nicknames[clients.index(client)] == 'admin':
+                    name_to_kick = msg.decode('ascii')[5:]
+                    kick_user(name_to_kick)
+                else:
+                    client.send('Command was refused!'.encode('ascii'))
+            elif msg.decode('ascii').startwith('BAN'):
+                if nicknames[clients.index(client)] == 'admin':
+                    name_to_ban = msg.decode('ascii')[4:]
+                    kick_user(name_to_ban)
+                    with open('bans.txt', 'a') as f:
+                        f.write('{}\n'.format(name_to_ban))
+                    print('{} was banned\n'.format(name_to_ban))
+                else:
+                    client.send('Command was refused!'.encode('ascii'))
+            else:
+                broadcast(message)
+        except:
+            if client in clients:
+                index = clients.index(client)
+                clients.remove(client)
+                client.close()
+                nickname = nicknames[index]
+                broadcast('{} left!'.format(nickname).encode('ascii'))
+                nicknames.remove(nickname)
                 break
-            elif message:
-                sendMessage(message, clientSockets)
-                message = ''
-    pass
 
 
-def getOnlineUsers(online):
-    onUsers = []
-    for key, value in online.items():
-        if value:
-            onUsers.append(key)
-    return onUsers
+def receive_msg():
+    while True:
+        client, address = server.accept()
+        print("Connected with {}".format(str(address)))
+
+        client.send('NICK'.encode('ascii'))
+
+        nickname = client.recv(1024).decode('ascii')
+
+        with open('bans.txt', 'r') as f:
+            bans = f.readlines()
+
+        if nickname + '\n' in bans:
+            client.send('BAN'.encode('ascii'))
+            client.close()
+            continue
+
+        if nickname == 'admin':
+            client.send('PASS'.encode('ascii'))
+            password = client.recv(1024).decode('ascii')
+
+            if password != 'admin':
+                client.send('REFUSE'.encode('ascii'))
+                client.close()
+                continue
+
+        nicknames.append(nickname)
+        clients.append(client)
+
+        print("Nickname of the client is {}".format(nickname))
+        broadcast("{} joined!".format(nickname).encode('ascii'))
+        client.send('Connected to server!'.encode('ascii'))
+
+        thread = threading.Thread(target=handle, args=(client,))
+        thread.start()
 
 
-def isConnected(login, online):
-    if online[login]:
-        return True
-    return False
+def kick_user(name):
+    if name in nicknames:
+        name_index = nicknames.index(name)
+        client_to_kick = clients[name_index]
+        clients.remove(client_to_kick)
+        client_to_kick.send('You were kicked by an admin!'.encode('ascii'))
+        client_to_kick.close()
+        nicknames.remove(name)
+        broadcast('{} was kicked by an admin'.format(name).encode('ascii'))
 
 
-def closeClient(clsock, clientSockets, online, user):
-    online[user] = False
-    clientSockets.remove(clsock)
-    clsock.close()
-    pass
+print('Server is listening...')
+receive_msg()
 
-
-def checkUser(authorization, account, online):
-    loginPasswd = authorization.decode('utf8').split('~')
-    if isConnected(loginPasswd[0], online):
-        return False
-    if loginPasswd[0] in account.keys():
-        print('login ok')
-        if loginPasswd[1] == account[loginPasswd[0]]:
-            online[loginPasswd[0]] = True
-            print('passwd ok')
-            return True
-    return False
-
-
-clientSockets = []
-MAX_CLIENTS = 10
-address = ('localhost', 8017)
-
-sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-sock.bind(address)
-sock.listen(MAX_CLIENTS)
-
-while True:
-    conn, addr = sock.accept()
-    print(conn)
-    threadRecv = Thread(target=reciveMessage, args=(conn, clientSockets, online, accounts, 'hello'))
-    threadRecv.start()
-
-sock.close()
