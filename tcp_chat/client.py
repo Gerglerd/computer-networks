@@ -1,49 +1,63 @@
 import socket
-from threading import Thread
+import threading
 
-serverAddress = ('localhost', 8017)
+nickname = input('Choose your nickname: ')
+if nickname == 'admin':
+    password = input('Enter password for admin: ')
 
+client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+client.connect(('127.0.0.1', 5555))
 
-def disconnect(sock, login):
-    print("closed: ", login)
-    sock.send(bytes(login, 'utf8'))
-    sock.close()
-    exit(0)
-    pass
+stop_thread = False
 
-
-def reciveMessage(sock, message):
+def receive_msg():
     while True:
-        message = sock.recv(1024)
-        print(message.decode())
+        global stop_thread
+        if stop_thread:
+            print('Stop threading...')
+            break
+        try:
+            message = client.recv(1024).decode('ascii')
+            if message == 'NICK':
+                client.send(nickname.encode('ascii'))
+                next_message = client.recv(1024).decode('ascii')
+                if next_message == 'PASS':
+                    client.send(password.encode('ascii'))
+                    if client.recv(1024).decode('ascii') == 'REFUSE':
+                        print('Connection was refused! Wrong password!')
+                        stop_thread = True
+                elif next_message == 'BAN':
+                    print('Connection refused because of ban!')
+                    client.close()
+                    stop_thread = True
+            else:
+                print(message)
+        except:
+            print('An error occurred')
+            client.close()
+            break
 
 
-while True:
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect(serverAddress)
-    print("Enter login: ")
-    login = input()
-    print("Enter password: ")
-    passwd = input()
-    auth = login + '~' + passwd
-    s.send(bytes(auth, 'utf8'))
-    data = s.recv(1024)
-    if data.decode('utf8') == 'correct':
-        print('Correct!')
-        break
-    else:
-        s.close()
-        print('Incorrect login or password. Try again!')
-try:
-    recvThread = Thread(target=reciveMessage, args=(s, 'hello'))
-    recvThread.start()
+def write():
     while True:
-        message = input()
-        if message == "!disconnect":
-            s.send(bytes(message, 'utf8'))
-            disconnect(s, login)
-        s.send(bytes(message, 'utf8'))
-except KeyboardInterrupt:
-    disconnect(s, login)
+        if stop_thread:
+            print('Stop threading...')
+            break
+        message = '{}: {}'.format(nickname, input(''))
+        if message[len(nickname) + 2:].startswith('/'):
+            if nickname == 'admin':
+                if message[len(nickname) + 2:].startswith('/kick'):
+                    client.send('KICK {}'.format(message[len(nickname) + 2 + 6:]).encode('ascii'))
+                elif message[len(nickname) + 2:].startswith('/ban'):
+                    client.send('BAN {}'.format(message[len(nickname) + 2 + 5:]).encode('ascii'))
+            else:
+                print('Commands can only be executed by the admin!')
+        else:
+            client.send(message.encode('ascii'))
 
-s.close()
+
+receive_thread = threading.Thread(target=receive_msg)
+receive_thread.start()
+
+write_tread = threading.Thread(target=write)
+write_tread.start()
