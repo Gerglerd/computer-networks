@@ -58,7 +58,7 @@ def plot_cont():
 
 
 pcap = pcapy.open_live("wlp1s0", 65536, 1, 50)
-# pcap.setfilter("port 80")
+pcap.setfilter("tcp port 80")
 thread1 = PcapThread(pcap)
 thread1.start()
 plot_cont()
